@@ -48,11 +48,11 @@ def subtitle(text: str, final: bool) -> dict[str, Any]:
     return {"type": ServerMsg.SUBTITLE, "text": text, "final": final}
 
 
-def expression(emotion: str, intensity: float) -> dict[str, Any]:
+def expression(emotion: str, intensity: float, t: float = 0.0) -> dict[str, Any]:
     if emotion not in EMOTIONS:
         emotion = "neutral"
     intensity = max(0.0, min(1.0, intensity))
-    return {"type": ServerMsg.EXPRESSION, "emotion": emotion, "intensity": intensity}
+    return {"type": ServerMsg.EXPRESSION, "emotion": emotion, "intensity": intensity, "t": t}
 
 
 def viseme(phoneme: str, t: float) -> dict[str, Any]:

@@ -1,67 +1,141 @@
 // Entry point for the browser demo. Wires the WebSocket event stream to the
-// avatar renderer and the subtitle/composer UI. Deliberately small — all the
-// thinking happens in the Python core.
+// avatar renderer and the onboarding / subtitle / composer UI. Deliberately small
+// — all the thinking happens in the Python core.
 
 import { KomorebiSocket } from "./ws.js";
 import { ServerMsg, userMessage, hello } from "./protocol.js";
 import { PlaceholderAvatar } from "./avatar/PlaceholderAvatar.js";
 
-const canvas = document.getElementById("stage");
-const subtitleEl = document.getElementById("subtitle");
-const statusEl = document.getElementById("status");
-const inputEl = document.getElementById("input");
-const formEl = document.getElementById("composer");
+const els = {
+  canvas: document.getElementById("stage"),
+  subtitle: document.getElementById("subtitle"),
+  status: document.getElementById("status"),
+  input: document.getElementById("input"),
+  form: document.getElementById("composer"),
+  samples: document.getElementById("samples"),
+  onboard: document.getElementById("onboard"),
+  personaList: document.getElementById("personaList"),
+  start: document.getElementById("start"),
+};
+
+const SAMPLE_PROMPTS = ["こんにちは！", "今日あったこと聞いてくれる？", "おすすめの過ごし方は？", "ちょっと元気ないんだ…"];
 
 const avatar = new PlaceholderAvatar();
-avatar.mount(canvas);
+avatar.mount(els.canvas);
 
-// Schedule viseme frames relative to the moment speech started.
 let speechStartedAt = 0;
+let sock = null;
+let selectedPersona = null;
+let pendingTimers = [];
 
-const wsUrl = (location.protocol === "https:" ? "wss://" : "ws://") + location.host + "/ws";
-const sock = new KomorebiSocket(wsUrl);
+function clearTimers() {
+  pendingTimers.forEach(clearTimeout);
+  pendingTimers = [];
+}
 
-sock
-  .on(ServerMsg.READY, (m) => {
-    statusEl.textContent = `connected · ${m.persona?.name ?? "?"}`;
-  })
-  .on(ServerMsg.SPEECH_START, () => {
-    speechStartedAt = performance.now();
-    avatar.speechStart();
-  })
-  .on(ServerMsg.EXPRESSION, (m) => {
-    avatar.setExpression({ emotion: m.emotion, intensity: m.intensity });
-  })
-  .on(ServerMsg.VISEME, (m) => {
-    // m.t is seconds from speech start; schedule the mouth frame.
-    const delay = Math.max(0, m.t * 1000 - (performance.now() - speechStartedAt));
-    setTimeout(() => avatar.setViseme({ phoneme: m.phoneme }), delay);
-  })
-  .on(ServerMsg.SUBTITLE, (m) => {
-    subtitleEl.textContent = m.text;
-  })
-  .on(ServerMsg.SPEECH_END, () => {
-    avatar.speechEnd();
-  })
-  .on(ServerMsg.ERROR, (m) => {
-    statusEl.textContent = `error: ${m.message}`;
-  });
+// ---- onboarding: load personas, let the user pick one --------------------
 
-formEl.addEventListener("submit", (ev) => {
+async function loadPersonas() {
+  try {
+    const res = await fetch("/personas");
+    const data = await res.json();
+    selectedPersona = data.default;
+    renderPersonas(data.personas, data.default);
+  } catch {
+    els.personaList.textContent = "（コアに接続できませんでした。サーバーは起動していますか？）";
+  }
+}
+
+function renderPersonas(personas, defaultId) {
+  els.personaList.innerHTML = "";
+  for (const p of personas) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "persona";
+    btn.setAttribute("aria-pressed", String(p.id === defaultId));
+    btn.innerHTML = `<div class="pname">${p.name}</div><div class="ptag">${p.tagline ?? ""}</div>`;
+    btn.addEventListener("click", () => {
+      selectedPersona = p.id;
+      [...els.personaList.children].forEach((c) => c.setAttribute("aria-pressed", "false"));
+      btn.setAttribute("aria-pressed", "true");
+    });
+    els.personaList.appendChild(btn);
+  }
+}
+
+function renderSamples() {
+  els.samples.innerHTML = "";
+  for (const text of SAMPLE_PROMPTS) {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "chip";
+    chip.textContent = text;
+    chip.addEventListener("click", () => sendMessage(text));
+    els.samples.appendChild(chip);
+  }
+}
+
+// ---- conversation ---------------------------------------------------------
+
+function connect(personaId) {
+  clearTimers();
+  if (sock) sock.close();
+  const wsUrl = (location.protocol === "https:" ? "wss://" : "ws://") + location.host + "/ws";
+  sock = new KomorebiSocket(wsUrl);
+  sock
+    .on(ServerMsg.READY, (m) => {
+      els.status.textContent = `connected · ${m.persona?.name ?? "?"}`;
+    })
+    .on(ServerMsg.SPEECH_START, () => {
+      speechStartedAt = performance.now();
+      avatar.speechStart();
+    })
+    .on(ServerMsg.EXPRESSION, (m) => scheduleAt(m.t, () => avatar.setExpression(m)))
+    .on(ServerMsg.VISEME, (m) => scheduleAt(m.t, () => avatar.setViseme({ phoneme: m.phoneme })))
+    .on(ServerMsg.SUBTITLE, (m) => {
+      els.subtitle.textContent = m.text;
+    })
+    .on(ServerMsg.SPEECH_END, () => avatar.speechEnd())
+    .on(ServerMsg.ERROR, (m) => {
+      els.status.textContent = `error: ${m.message}`;
+    });
+
+  return sock
+    .connect()
+    .then(() => {
+      sock.send(hello(personaId));
+      els.status.textContent = "connected";
+    })
+    .catch(() => {
+      els.status.textContent = "could not connect to Komorebi core (is it running?)";
+    });
+}
+
+// Schedule a callback `t` seconds after the current speech started.
+function scheduleAt(t, fn) {
+  const delay = Math.max(0, (t ?? 0) * 1000 - (performance.now() - speechStartedAt));
+  pendingTimers.push(setTimeout(fn, delay));
+}
+
+function sendMessage(text) {
+  const value = (text ?? "").trim();
+  if (!value || !sock) return;
+  els.subtitle.textContent = value;
+  sock.send(userMessage(value));
+  els.input.value = "";
+}
+
+// ---- wiring ---------------------------------------------------------------
+
+els.form.addEventListener("submit", (ev) => {
   ev.preventDefault();
-  const text = inputEl.value.trim();
-  if (!text) return;
-  subtitleEl.textContent = text;
-  sock.send(userMessage(text));
-  inputEl.value = "";
+  sendMessage(els.input.value);
 });
 
-(async () => {
-  try {
-    await sock.connect();
-    sock.send(hello(null)); // use server default persona
-    statusEl.textContent = "connected";
-  } catch {
-    statusEl.textContent = "could not connect to Komorebi core (is it running?)";
-  }
-})();
+els.start.addEventListener("click", async () => {
+  els.onboard.classList.add("hidden");
+  await connect(selectedPersona);
+});
+
+renderSamples();
+loadPersonas();

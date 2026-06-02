@@ -16,6 +16,7 @@ class Config:
     port: int = 8000
     llm_backend: str = "echo"
     tts_backend: str = "silent"
+    emotion_backend: str = "heuristic"
     default_persona: str = "komorebi"
 
     @classmethod
@@ -25,5 +26,6 @@ class Config:
             port=int(os.environ.get("KOMOREBI_PORT", cls.port)),
             llm_backend=os.environ.get("KOMOREBI_LLM", cls.llm_backend),
             tts_backend=os.environ.get("KOMOREBI_TTS", cls.tts_backend),
+            emotion_backend=os.environ.get("KOMOREBI_EMOTION", cls.emotion_backend),
             default_persona=os.environ.get("KOMOREBI_PERSONA", cls.default_persona),
         )

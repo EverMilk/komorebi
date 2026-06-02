@@ -35,7 +35,7 @@ Endpoint: `GET /ws` (WebSocket). All messages are JSON objects with a `type` fie
 | `ready`        | `persona: PersonaInfo`                           | handshake complete, persona loaded   |
 | `speech_start` | —                                                | the character is about to speak      |
 | `subtitle`     | `text: string`, `final: bool`                    | caption (may stream incrementally)   |
-| `expression`   | `emotion: string`, `intensity: float (0..1)`     | drive the face                       |
+| `expression`   | `emotion: string`, `intensity: float (0..1)`, `t: float` | drive the face at time `t` (s) |
 | `viseme`       | `phoneme: string`, `t: float` (seconds offset)   | mouth shape at time `t`              |
 | `audio`        | `format: string`, `data_b64: string`             | optional audio chunk (empty in demo) |
 | `speech_end`   | —                                                | the character finished speaking      |
@@ -46,13 +46,17 @@ A normal turn looks like:
 ```
 client → user_message
 server → speech_start
-server → expression {emotion:"joy", intensity:0.6}
-server → subtitle   {text:"...", final:false}   (0..n times)
-server → viseme     {phoneme:"a", t:0.0}         (0..n times)
-server → audio      {...}                        (0..n, omitted in demo)
+server → subtitle   {text:"...", final:false}        (full text up front)
+server → expression {emotion:"joy", intensity:0.6, t:0.0}   (one per sentence, timed)
+server → viseme     {phoneme:"a", t:0.0}             (0..n times)
+server → audio      {...}                            (0..n, omitted in demo)
 server → subtitle   {text:"...", final:true}
 server → speech_end
 ```
+
+Expression and viseme events both carry a `t` offset (seconds from `speech_start`)
+so the renderer can schedule them against speech. A reply is split into sentences
+and each gets its own timed `expression`, so the face changes *through* a line.
 
 ## ExpressionCommand — the avatar-agnostic core
 
@@ -76,6 +80,7 @@ Backends are selected at runtime by environment variable:
 |------------------|----------|----------------------|
 | `KOMOREBI_LLM`   | `echo`   | which LLM backend    |
 | `KOMOREBI_TTS`   | `silent` | which TTS backend    |
+| `KOMOREBI_EMOTION`| `heuristic` | emotion classifier: `heuristic` or `llm` |
 | `KOMOREBI_PERSONA`| `komorebi` | default persona id |
 | `KOMOREBI_HOST`  | `127.0.0.1` | bind host         |
 | `KOMOREBI_PORT`  | `8000`   | bind port            |

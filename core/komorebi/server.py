@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
@@ -19,7 +20,7 @@ from .backends.llm import create_llm
 from .backends.tts import create_tts
 from .config import Config
 from .orchestrator import Orchestrator
-from .persona import load_persona
+from .persona import list_personas, load_persona
 
 _WEB_DIR = Path(__file__).resolve().parents[2] / "web"
 
@@ -30,6 +31,11 @@ def create_app(config: Config) -> FastAPI:
     @app.get("/healthz")
     async def healthz() -> dict[str, str]:
         return {"status": "ok", "llm": config.llm_backend, "tts": config.tts_backend}
+
+    @app.get("/personas")
+    async def personas() -> dict[str, Any]:
+        items = [load_persona(pid).info() for pid in list_personas()]
+        return {"default": config.default_persona, "personas": items}
 
     @app.websocket("/ws")
     async def ws(websocket: WebSocket) -> None:
@@ -67,6 +73,7 @@ async def _conversation(websocket: WebSocket, config: Config) -> None:
         persona=persona,
         llm=create_llm(config.llm_backend),
         tts=create_tts(config.tts_backend),
+        emotion_backend=config.emotion_backend,
     )
 
     await _send(websocket, protocol.ready(persona.info()))

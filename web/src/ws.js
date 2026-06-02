@@ -34,4 +34,13 @@ export class KomorebiSocket {
   send(obj) {
     this.ws?.send(JSON.stringify(obj));
   }
+
+  close() {
+    try {
+      this.ws?.close();
+    } catch {
+      /* already closed */
+    }
+    this.ws = null;
+  }
 }

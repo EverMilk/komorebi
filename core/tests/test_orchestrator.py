@@ -1,8 +1,6 @@
-import pytest
-
 from komorebi.backends.llm.echo import EchoBackend
 from komorebi.backends.tts.silent import SilentBackend
-from komorebi.orchestrator import Orchestrator
+from komorebi.orchestrator import Orchestrator, split_sentences
 from komorebi.persona import Persona
 from komorebi.protocol import ServerMsg
 
@@ -12,7 +10,12 @@ def _orch() -> Orchestrator:
     return Orchestrator(persona=persona, llm=EchoBackend(), tts=SilentBackend())
 
 
-@pytest.mark.asyncio
+def test_split_sentences():
+    parts = split_sentences("やった！すごいね。これは何？")
+    assert parts == ["やった！", "すごいね。", "これは何？"]
+    assert split_sentences("") == []
+
+
 async def test_turn_emits_contract_envelope():
     orch = _orch()
     events = [e async for e in orch.handle_user_message("こんにちは")]
@@ -27,18 +30,22 @@ async def test_turn_emits_contract_envelope():
     assert len(finals) == 1
 
 
-@pytest.mark.asyncio
+async def test_expression_per_sentence_with_increasing_time():
+    orch = _orch()
+    # Force a multi-sentence reply by speaking through _speak directly.
+    events = [e async for e in orch._speak("やった！すごいね。これは何？")]
+    exprs = [e for e in events if e["type"] == ServerMsg.EXPRESSION]
+    assert len(exprs) == 3
+    times = [e["t"] for e in exprs]
+    assert times == sorted(times)
+    assert times[0] == 0.0
+    for e in exprs:
+        assert 0.0 <= e["intensity"] <= 1.0
+
+
 async def test_history_is_recorded():
     orch = _orch()
     _ = [e async for e in orch.handle_user_message("hi")]
     assert orch.history[0] == {"role": "user", "content": "hi"}
     assert orch.history[1]["role"] == "assistant"
     assert orch.history[1]["content"]
-
-
-@pytest.mark.asyncio
-async def test_expression_intensity_in_range():
-    orch = _orch()
-    events = [e async for e in orch.handle_user_message("嬉しい！")]
-    expr = next(e for e in events if e["type"] == ServerMsg.EXPRESSION)
-    assert 0.0 <= expr["intensity"] <= 1.0

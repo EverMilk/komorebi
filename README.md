@@ -64,10 +64,18 @@ vars (see [`docs/architecture.md`](./docs/architecture.md)) when you're ready.
 
 ## Roadmap
 
-- **M0 — skeleton (you are here):** monorepo, WebSocket contract, demo loop, placeholder avatar.
-- **M1 — Acceptance UX:** 30-second onboarding, EmotionEngine v1, Persona Pack spec + samples.
+- **M0 — skeleton ✅:** monorepo, WebSocket contract, demo loop, placeholder avatar.
+- **M1 — Acceptance UX (you are here) ✅:** 30-second guided onboarding with a persona
+  picker, EmotionEngine v1 (pluggable heuristic / LLM classifier, per-sentence timed
+  expressions), Persona Pack spec + 3 sample characters.
 - **M2 — dual avatars:** `AvatarBackend` abstraction with VRM and Live2D (optional plugin) renderers.
 - **M3 — real demand:** YouTube/Twitch chat adapter, community persona gallery, official Codex backend.
+
+### Choosing the emotion engine
+
+Set `KOMOREBI_EMOTION=heuristic` (default, zero-cost keyword rules) or
+`KOMOREBI_EMOTION=llm` (labels each line with the configured LLM backend, falling
+back to the heuristic on any error).
 
 ## Contributing
 

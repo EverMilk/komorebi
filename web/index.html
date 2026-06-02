@@ -10,18 +10,25 @@
     body {
       margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
       background: radial-gradient(circle at 50% 20%, #2a3b2e, #14201a);
-      color: #eef3ee; height: 100vh; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; gap: 16px;
+      color: #eef3ee; min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 14px;
     }
     h1 { font-weight: 600; font-size: 1.4rem; margin: 0; opacity: 0.85; }
     #stage {
-      width: 360px; height: 360px; border-radius: 24px;
+      width: 320px; height: 320px; border-radius: 24px;
       background: rgba(255,255,255,0.04); box-shadow: 0 8px 40px rgba(0,0,0,0.4);
     }
     #subtitle {
       min-height: 2.4em; max-width: 520px; text-align: center; font-size: 1.1rem;
       line-height: 1.4; padding: 0 16px;
     }
+    .chips { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; max-width: 560px; }
+    .chip {
+      padding: 7px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.06); color: inherit; cursor: pointer; font-size: 0.9rem;
+    }
+    .chip:hover { background: rgba(255,255,255,0.14); }
+    .chip[aria-pressed="true"] { background: #6cc18a; color: #10241a; border-color: #6cc18a; }
     #composer { display: flex; gap: 8px; width: min(520px, 90vw); }
     #input {
       flex: 1; padding: 12px 16px; border-radius: 999px; border: none;
@@ -32,12 +39,55 @@
       background: #6cc18a; color: #10241a; font-weight: 600;
     }
     #status { font-size: 0.8rem; opacity: 0.5; }
+
+    /* Onboarding overlay */
+    #onboard {
+      position: fixed; inset: 0; background: rgba(8,16,12,0.86); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center; z-index: 10;
+    }
+    #onboard.hidden { display: none; }
+    .card {
+      background: #1c2a22; border: 1px solid rgba(255,255,255,0.1); border-radius: 20px;
+      padding: 28px; max-width: 460px; width: 90vw; text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .card h2 { margin: 0 0 6px; font-size: 1.5rem; }
+    .card p { margin: 6px 0 18px; opacity: 0.8; line-height: 1.5; font-size: 0.95rem; }
+    .card .badge {
+      display: inline-block; margin-bottom: 14px; padding: 4px 12px; border-radius: 999px;
+      background: rgba(108,193,138,0.18); color: #9fe0b6; font-size: 0.8rem;
+    }
+    #personaList { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; text-align: left; }
+    .persona {
+      padding: 12px 14px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.04); cursor: pointer;
+    }
+    .persona:hover { background: rgba(255,255,255,0.1); }
+    .persona[aria-pressed="true"] { border-color: #6cc18a; background: rgba(108,193,138,0.12); }
+    .persona .pname { font-weight: 600; }
+    .persona .ptag { font-size: 0.82rem; opacity: 0.7; }
+    #start {
+      width: 100%; padding: 13px; border-radius: 999px; border: none; cursor: pointer;
+      background: #6cc18a; color: #10241a; font-weight: 700; font-size: 1rem;
+    }
   </style>
 </head>
 <body>
+  <!-- 30-second onboarding: no jargon, no API key, pick a character, go. -->
+  <div id="onboard">
+    <div class="card">
+      <div class="badge">✨ APIキー不要 · 30秒で会話</div>
+      <h2>🌿 Komorebi へようこそ</h2>
+      <p>AIに、顔と心を。話しかけると、キャラクターが表情で応えます。<br />まずは話し相手を選んでね。</p>
+      <div id="personaList">読み込み中…</div>
+      <button id="start" type="button">この子と話す</button>
+    </div>
+  </div>
+
   <h1>🌿 Komorebi</h1>
-  <canvas id="stage" width="360" height="360"></canvas>
-  <div id="subtitle">...</div>
+  <canvas id="stage" width="320" height="320"></canvas>
+  <div id="subtitle">…</div>
+  <div class="chips" id="samples"></div>
   <form id="composer" autocomplete="off">
     <input id="input" placeholder="話しかけてみて…" />
     <button id="send" type="submit">送信</button>
