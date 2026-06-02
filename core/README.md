@@ -1,7 +1,7 @@
 # komorebi (core)
 
-The Python core of [Komorebi](https://github.com/) — an open-source AITuber engine
-that makes AI approachable through animated characters.
+The Python core of [Komorebi](https://github.com/EverMilk/komorebi) — an open-source
+AITuber engine that makes AI approachable through animated characters.
 
 This package contains the "brain": LLM, emotion, TTS, persona, orchestration, and a
 FastAPI WebSocket server. It streams expression and viseme events to a thin browser

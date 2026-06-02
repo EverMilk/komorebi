@@ -18,6 +18,11 @@ dependencies = [
     "httpx>=0.27",
 ]
 
+[project.urls]
+Homepage = "https://github.com/EverMilk/komorebi"
+Repository = "https://github.com/EverMilk/komorebi"
+Issues = "https://github.com/EverMilk/komorebi/issues"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
