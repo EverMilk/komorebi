@@ -7,8 +7,10 @@
 ![status: M3 live](https://img.shields.io/badge/status-M3%20live-brightgreen)
 ![python](https://img.shields.io/badge/python-3.10%2B-blue)
 
-<!-- TODO(M1): replace with a 3s demo GIF — "open browser → character talks back" -->
-<p align="center"><em>Demo GIF coming in M1</em></p>
+<!-- TODO: replace with a short demo GIF — left: "open browser → character talks
+     back"; right: live mode (?mode=live) reacting to chat. Capture from the
+     zero-setup demos in Quick start below. -->
+<p align="center"><em>Demo GIF coming soon — meanwhile it's two commands away (see <a href="#quick-start-demo-mode-no-api-key">Quick start</a>).</em></p>
 
 ## Why Komorebi?
 
@@ -62,14 +64,25 @@ Demo mode uses the `echo` LLM backend and a silent TTS backend, so the character
 reacts and lip-syncs without any external service. Plug in a real backend via env
 vars (see [`docs/architecture.md`](./docs/architecture.md)) when you're ready.
 
+Want the **AITuber / live-stream view** instead? Same zero setup:
+
+```bash
+KOMOREBI_STREAM=mock python -m komorebi
+# then open http://localhost:8000/?mode=live
+```
+
+A shared character reacts to a built-in mock chat feed — swap `mock` for `twitch`
+(no credentials) or `youtube` to drive it from a real stream. See
+[`docs/live-streaming.md`](./docs/live-streaming.md).
+
 ## Roadmap
 
 - **M0 — skeleton ✅:** monorepo, WebSocket contract, demo loop, placeholder avatar.
-- **M1 — Acceptance UX (you are here) ✅:** 30-second guided onboarding with a persona
-  picker, EmotionEngine v1 (pluggable heuristic / LLM classifier, per-sentence timed
+- **M1 — Acceptance UX ✅:** 30-second guided onboarding with a persona picker,
+  EmotionEngine v1 (pluggable heuristic / LLM classifier, per-sentence timed
   expressions), Persona Pack spec + 3 sample characters.
-- **M2 — dual avatars (you are here):** `AvatarBackend` abstraction with a real 3D
-  **VRM renderer** (three-vrm) alongside the placeholder, selectable at runtime and
+- **M2 — dual avatars ◐:** `AvatarBackend` abstraction with a real 3D **VRM
+  renderer** (three-vrm) alongside the placeholder, selectable at runtime and
   falling back gracefully. Live2D (optional plugin) and the TS + Vite migration are
   the remaining M2 items. See [`docs/avatar-renderers.md`](./docs/avatar-renderers.md).
 - **M3 — real demand (you are here) ✅:** live broadcast mode driven by real
@@ -121,6 +134,6 @@ Adding a persona, a backend, or an avatar renderer is the easiest way in — see
 
 ## License
 
-MIT. Note: the optional Live2D renderer (arriving in M2) depends on the Live2D
-Cubism SDK, which has its own commercial license and is therefore shipped as a
+MIT. Note: the optional Live2D renderer (planned) depends on the Live2D Cubism
+SDK, which has its own commercial license and is therefore shipped as a
 **separate optional plugin** to keep the core 100% MIT.
