@@ -7,10 +7,12 @@
 ![status: M3 live](https://img.shields.io/badge/status-M3%20live-brightgreen)
 ![python](https://img.shields.io/badge/python-3.10%2B-blue)
 
-<!-- TODO: replace with a short demo GIF — left: "open browser → character talks
-     back"; right: live mode (?mode=live) reacting to chat. Capture from the
-     zero-setup demos in Quick start below. -->
-<p align="center"><em>Demo GIF coming soon — meanwhile it's two commands away (see <a href="#quick-start-demo-mode-no-api-key">Quick start</a>).</em></p>
+<!-- demo.gif is rendered offline from the *real* echo reply + heuristic emotion +
+     placeholder-avatar geometry: `python scripts/generate_demo_gif.py`. -->
+<p align="center">
+  <img src="./docs/demo.gif" alt="Komorebi demo — a character reacts and lip-syncs to chat, then to a live stream" width="320" />
+  <br /><em>1:1 chat, then live-stream mode — both with zero API keys (<a href="#quick-start-demo-mode-no-api-key">Quick start</a>).</em>
+</p>
 
 ## Why Komorebi?
 
