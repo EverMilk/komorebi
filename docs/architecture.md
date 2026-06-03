@@ -72,7 +72,7 @@ override the mapping, but the wire format stays abstract.
 |---------------|---------------------------------------|----------------|-------------------------------|
 | `LLMBackend`  | `backends/llm/base.py`                | `echo`         | openai / codex / claude / ollama |
 | `TTSBackend`  | `backends/tts/base.py`                | `silent`       | voicevox / style-bert-vits2   |
-| `AvatarBackend`| `web/src/avatar/AvatarBackend.js`    | `placeholder`  | vrm (three-vrm) / live2d (plugin) |
+| `AvatarBackend`| `web/src/avatar/AvatarBackend.js`    | `placeholder`, `vrm` | live2d (plugin) |
 
 Backends are selected at runtime by environment variable:
 

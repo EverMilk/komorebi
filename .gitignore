@@ -14,6 +14,11 @@ node_modules/
 web/dist/
 *.log
 
+# Avatar models — bring your own; they carry their own (often non-MIT) licenses
+*.vrm
+*.vrma
+web/assets/*.vrm
+
 # Editor / OS
 .vscode/
 .idea/

@@ -93,6 +93,18 @@
     <button id="send" type="submit">送信</button>
   </form>
   <div id="status">connecting…</div>
+
+  <!-- three + three-vrm are loaded from a CDN only when the VRM renderer is
+       selected (?renderer=vrm). The placeholder renderer needs none of this. -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.169.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.169.0/examples/jsm/",
+      "@pixiv/three-vrm": "https://unpkg.com/@pixiv/three-vrm@3.4.0/lib/three-vrm.module.js"
+    }
+  }
+  </script>
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>

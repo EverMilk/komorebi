@@ -54,6 +54,11 @@ def create_app(config: Config) -> FastAPI:
 
         app.mount("/src", StaticFiles(directory=_WEB_DIR / "src"), name="src")
 
+        # Optional: user-provided VRM models live here. Not bundled (own license).
+        assets_dir = _WEB_DIR / "assets"
+        if assets_dir.exists():
+            app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+
     return app
 
 

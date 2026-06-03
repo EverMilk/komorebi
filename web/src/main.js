@@ -20,8 +20,35 @@ const els = {
 
 const SAMPLE_PROMPTS = ["こんにちは！", "今日あったこと聞いてくれる？", "おすすめの過ごし方は？", "ちょっと元気ないんだ…"];
 
-const avatar = new PlaceholderAvatar();
-avatar.mount(els.canvas);
+// Renderer selection. Default is the dependency-free placeholder; ?renderer=vrm
+// opts into the 3D VRM renderer (loaded lazily). VRM needs a model — provide one
+// via ?vrm=<url> or drop a file at web/assets/avatar.vrm. On any failure we fall
+// back to the placeholder so the demo always works.
+let avatar = null;
+
+async function setupAvatar() {
+  const params = new URLSearchParams(location.search);
+  const wanted = params.get("renderer") || "placeholder";
+
+  if (wanted === "vrm") {
+    const url = params.get("vrm") || "/assets/avatar.vrm";
+    try {
+      const { VrmAvatar } = await import("./avatar/VrmAvatar.js");
+      const vrm = new VrmAvatar();
+      vrm.mount(els.canvas);
+      await vrm.loadModel(url);
+      avatar = vrm;
+      return;
+    } catch (err) {
+      console.warn("VRM renderer unavailable, falling back to placeholder:", err);
+      els.status.textContent = "VRMモデルを読み込めませんでした。プレースホルダーに切替。";
+    }
+  }
+
+  const placeholder = new PlaceholderAvatar();
+  placeholder.mount(els.canvas);
+  avatar = placeholder;
+}
 
 let speechStartedAt = 0;
 let sock = null;
@@ -88,14 +115,14 @@ function connect(personaId) {
     })
     .on(ServerMsg.SPEECH_START, () => {
       speechStartedAt = performance.now();
-      avatar.speechStart();
+      avatar?.speechStart();
     })
-    .on(ServerMsg.EXPRESSION, (m) => scheduleAt(m.t, () => avatar.setExpression(m)))
-    .on(ServerMsg.VISEME, (m) => scheduleAt(m.t, () => avatar.setViseme({ phoneme: m.phoneme })))
+    .on(ServerMsg.EXPRESSION, (m) => scheduleAt(m.t, () => avatar?.setExpression(m)))
+    .on(ServerMsg.VISEME, (m) => scheduleAt(m.t, () => avatar?.setViseme({ phoneme: m.phoneme })))
     .on(ServerMsg.SUBTITLE, (m) => {
       els.subtitle.textContent = m.text;
     })
-    .on(ServerMsg.SPEECH_END, () => avatar.speechEnd())
+    .on(ServerMsg.SPEECH_END, () => avatar?.speechEnd())
     .on(ServerMsg.ERROR, (m) => {
       els.status.textContent = `error: ${m.message}`;
     });
@@ -137,5 +164,6 @@ els.start.addEventListener("click", async () => {
   await connect(selectedPersona);
 });
 
+setupAvatar();
 renderSamples();
 loadPersonas();

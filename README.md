@@ -68,7 +68,10 @@ vars (see [`docs/architecture.md`](./docs/architecture.md)) when you're ready.
 - **M1 — Acceptance UX (you are here) ✅:** 30-second guided onboarding with a persona
   picker, EmotionEngine v1 (pluggable heuristic / LLM classifier, per-sentence timed
   expressions), Persona Pack spec + 3 sample characters.
-- **M2 — dual avatars:** `AvatarBackend` abstraction with VRM and Live2D (optional plugin) renderers.
+- **M2 — dual avatars (you are here):** `AvatarBackend` abstraction with a real 3D
+  **VRM renderer** (three-vrm) alongside the placeholder, selectable at runtime and
+  falling back gracefully. Live2D (optional plugin) and the TS + Vite migration are
+  the remaining M2 items. See [`docs/avatar-renderers.md`](./docs/avatar-renderers.md).
 - **M3 — real demand:** YouTube/Twitch chat adapter, community persona gallery, official Codex backend.
 
 ### Choosing the emotion engine
