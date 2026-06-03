@@ -1,0 +1,33 @@
+# Komorebi Persona Pack v1 — community template
+# Copy this file to <your-id>.persona.yaml and edit. Full spec:
+# docs/persona-pack.md. The leading underscore keeps this template out of the
+# picker (it isn't a valid id) — your copy should NOT start with an underscore.
+
+id: changeme                      # must match the filename: <id>.persona.yaml
+name: 名前                         # display name shown in the picker
+
+tagline: One short line describing who this character is.
+
+persona_prompt: |
+  Describe the character's personality, voice, and boundaries here. This becomes
+  the system prompt. Be concrete: how do they talk, what do they care about, how
+  do they react when they don't know something? Keep them kind.
+
+greeting: "はじめまして！"          # spoken once when a viewer connects
+
+voice:
+  backend_hint: voicevox          # which TTS this character is tuned for
+  speaker_id: 1
+  speed: 1.0
+  pitch: 0.0
+
+# Optional. Multiplies the classified emotion intensity, so a character can lean
+# cheerful (joy > 1) or stoic (anger < 1) without changing any code.
+expression_bias:
+  neutral: 1.0
+  joy: 1.0
+  sadness: 1.0
+  anger: 1.0
+  surprise: 1.0
+  fear: 1.0
+  thinking: 1.0

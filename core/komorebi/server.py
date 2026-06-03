@@ -7,7 +7,11 @@ receives the event stream defined in ``docs/architecture.md``. Static files from
 
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import json
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
 
@@ -21,16 +25,38 @@ from .backends.tts import create_tts
 from .config import Config
 from .orchestrator import Orchestrator
 from .persona import list_personas, load_persona
+from .stream import Hub, run_stream
 
 _WEB_DIR = Path(__file__).resolve().parents[2] / "web"
 
 
 def create_app(config: Config) -> FastAPI:
-    app = FastAPI(title="Komorebi", version="0.0.1")
+    live_enabled = config.stream_source != "off"
+    hub = Hub() if live_enabled else None
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        task: asyncio.Task[None] | None = None
+        if hub is not None:
+            task = asyncio.create_task(run_stream(config, hub))
+        try:
+            yield
+        finally:
+            if task is not None:
+                task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await task
+
+    app = FastAPI(title="Komorebi", version="0.0.1", lifespan=lifespan)
 
     @app.get("/healthz")
     async def healthz() -> dict[str, str]:
-        return {"status": "ok", "llm": config.llm_backend, "tts": config.tts_backend}
+        return {
+            "status": "ok",
+            "llm": config.llm_backend,
+            "tts": config.tts_backend,
+            "stream": config.stream_source,
+        }
 
     @app.get("/personas")
     async def personas() -> dict[str, Any]:
@@ -44,6 +70,24 @@ def create_app(config: Config) -> FastAPI:
             await _conversation(websocket, config)
         except WebSocketDisconnect:
             pass
+
+    @app.websocket("/live")
+    async def live(websocket: WebSocket) -> None:
+        # Read-only broadcast: viewers watch the shared character react to chat.
+        await websocket.accept()
+        if hub is None:
+            await _send(websocket, protocol.error("live mode is off (set KOMOREBI_STREAM)"))
+            await websocket.close()
+            return
+        queue = hub.subscribe()
+        try:
+            while True:
+                event = await queue.get()
+                await _send(websocket, event)
+        except WebSocketDisconnect:
+            pass
+        finally:
+            hub.unsubscribe(queue)
 
     # Serve the front-end. In M0 the web app is a single static HTML file; once a
     # Vite build exists, point this at web/dist instead.

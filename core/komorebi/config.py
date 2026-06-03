@@ -18,6 +18,9 @@ class Config:
     tts_backend: str = "silent"
     emotion_backend: str = "heuristic"
     default_persona: str = "komorebi"
+    # Live broadcast mode. "off" disables it; "mock"/"twitch"/"youtube" select a
+    # stream adapter that drives the shared character from real chat.
+    stream_source: str = "off"
 
     @classmethod
     def from_env(cls) -> "Config":
@@ -28,4 +31,5 @@ class Config:
             tts_backend=os.environ.get("KOMOREBI_TTS", cls.tts_backend),
             emotion_backend=os.environ.get("KOMOREBI_EMOTION", cls.emotion_backend),
             default_persona=os.environ.get("KOMOREBI_PERSONA", cls.default_persona),
+            stream_source=os.environ.get("KOMOREBI_STREAM", cls.stream_source),
         )

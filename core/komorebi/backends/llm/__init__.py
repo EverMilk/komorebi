@@ -6,12 +6,14 @@ Add a backend by importing its class and registering it in ``_REGISTRY``.
 from __future__ import annotations
 
 from .base import LLMBackend, Message
+from .codex import CodexBackend
 from .echo import EchoBackend
 from .openai_compatible import OpenAICompatibleBackend
 
 _REGISTRY: dict[str, type] = {
     EchoBackend.name: EchoBackend,
     OpenAICompatibleBackend.name: OpenAICompatibleBackend,
+    CodexBackend.name: CodexBackend,
 }
 
 

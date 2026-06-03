@@ -17,6 +17,7 @@ export const ServerMsg = Object.freeze({
   VISEME: "viseme",
   AUDIO: "audio",
   SPEECH_END: "speech_end",
+  CHAT: "chat",
   ERROR: "error",
 });
 

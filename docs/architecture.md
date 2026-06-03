@@ -70,8 +70,9 @@ override the mapping, but the wire format stays abstract.
 
 | Interface     | File                                  | Reference impl | Real impls (later)            |
 |---------------|---------------------------------------|----------------|-------------------------------|
-| `LLMBackend`  | `backends/llm/base.py`                | `echo`         | openai / codex / claude / ollama |
+| `LLMBackend`  | `backends/llm/base.py`                | `echo`         | `openai`, `codex` / claude / ollama |
 | `TTSBackend`  | `backends/tts/base.py`                | `silent`       | voicevox / style-bert-vits2   |
+| `StreamAdapter`| `backends/stream/base.py`            | `mock`         | `twitch`, `youtube`           |
 | `AvatarBackend`| `web/src/avatar/AvatarBackend.js`    | `placeholder`, `vrm` | live2d (plugin) |
 
 Backends are selected at runtime by environment variable:
@@ -82,7 +83,12 @@ Backends are selected at runtime by environment variable:
 | `KOMOREBI_TTS`   | `silent` | which TTS backend    |
 | `KOMOREBI_EMOTION`| `heuristic` | emotion classifier: `heuristic` or `llm` |
 | `KOMOREBI_PERSONA`| `komorebi` | default persona id |
+| `KOMOREBI_STREAM`| `off`    | live broadcast source: `off` / `mock` / `twitch` / `youtube` |
 | `KOMOREBI_HOST`  | `127.0.0.1` | bind host         |
 | `KOMOREBI_PORT`  | `8000`   | bind port            |
 
 Defaults give you a working demo with no external services.
+
+When `KOMOREBI_STREAM` is not `off`, the server runs one shared character that
+reacts to a live chat feed and broadcasts to viewers over a read-only `/live`
+WebSocket (front-end: `?mode=live`). See [`live-streaming.md`](./live-streaming.md).

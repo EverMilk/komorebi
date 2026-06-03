@@ -40,6 +40,21 @@
     }
     #status { font-size: 0.8rem; opacity: 0.5; }
 
+    /* Live broadcast mode (?mode=live): a read-only chat feed, no composer. */
+    body.live #composer, body.live #samples, body.live #onboard { display: none; }
+    .live-badge {
+      display: none; padding: 4px 12px; border-radius: 999px; font-size: 0.8rem;
+      background: rgba(229,115,115,0.18); color: #f3a7a7; letter-spacing: 0.04em;
+    }
+    body.live .live-badge { display: inline-block; }
+    #chatfeed {
+      display: none; flex-direction: column; gap: 6px; width: min(520px, 90vw);
+      max-height: 180px; overflow-y: auto; padding: 4px;
+    }
+    body.live #chatfeed { display: flex; }
+    .chatline { font-size: 0.92rem; line-height: 1.35; opacity: 0.9; }
+    .chatline .who { color: #9fe0b6; font-weight: 600; margin-right: 6px; }
+
     /* Onboarding overlay */
     #onboard {
       position: fixed; inset: 0; background: rgba(8,16,12,0.86); backdrop-filter: blur(4px);
@@ -84,9 +99,10 @@
     </div>
   </div>
 
-  <h1>🌿 Komorebi</h1>
+  <h1>🌿 Komorebi <span class="live-badge">● LIVE</span></h1>
   <canvas id="stage" width="320" height="320"></canvas>
   <div id="subtitle">…</div>
+  <div id="chatfeed"></div>
   <div class="chips" id="samples"></div>
   <form id="composer" autocomplete="off">
     <input id="input" placeholder="話しかけてみて…" />

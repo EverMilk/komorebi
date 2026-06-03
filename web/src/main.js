@@ -16,6 +16,7 @@ const els = {
   onboard: document.getElementById("onboard"),
   personaList: document.getElementById("personaList"),
   start: document.getElementById("start"),
+  chatfeed: document.getElementById("chatfeed"),
 };
 
 const SAMPLE_PROMPTS = ["こんにちは！", "今日あったこと聞いてくれる？", "おすすめの過ごし方は？", "ちょっと元気ないんだ…"];
@@ -104,12 +105,11 @@ function renderSamples() {
 
 // ---- conversation ---------------------------------------------------------
 
-function connect(personaId) {
-  clearTimers();
-  if (sock) sock.close();
-  const wsUrl = (location.protocol === "https:" ? "wss://" : "ws://") + location.host + "/ws";
-  sock = new KomorebiSocket(wsUrl);
-  sock
+// Wire the shared avatar-driving events. Both the 1:1 chat (/ws) and the live
+// broadcast (/live) speak the same wire contract, so the rendering half is
+// identical — only the connection and input differ.
+function bindAvatarEvents(socket) {
+  socket
     .on(ServerMsg.READY, (m) => {
       els.status.textContent = `connected · ${m.persona?.name ?? "?"}`;
     })
@@ -126,12 +126,54 @@ function connect(personaId) {
     .on(ServerMsg.ERROR, (m) => {
       els.status.textContent = `error: ${m.message}`;
     });
+}
+
+function wsUrlFor(path) {
+  return (location.protocol === "https:" ? "wss://" : "ws://") + location.host + path;
+}
+
+function connect(personaId) {
+  clearTimers();
+  if (sock) sock.close();
+  sock = new KomorebiSocket(wsUrlFor("/ws"));
+  bindAvatarEvents(sock);
 
   return sock
     .connect()
     .then(() => {
       sock.send(hello(personaId));
       els.status.textContent = "connected";
+    })
+    .catch(() => {
+      els.status.textContent = "could not connect to Komorebi core (is it running?)";
+    });
+}
+
+// Live broadcast mode: read-only viewer of the shared character reacting to chat.
+function appendChat(m) {
+  const line = document.createElement("div");
+  line.className = "chatline";
+  const who = document.createElement("span");
+  who.className = "who";
+  who.textContent = m.author ?? "viewer";
+  line.appendChild(who);
+  line.appendChild(document.createTextNode(m.text ?? ""));
+  els.chatfeed.appendChild(line);
+  while (els.chatfeed.children.length > 30) els.chatfeed.removeChild(els.chatfeed.firstChild);
+  els.chatfeed.scrollTop = els.chatfeed.scrollHeight;
+}
+
+function connectLive() {
+  clearTimers();
+  if (sock) sock.close();
+  sock = new KomorebiSocket(wsUrlFor("/live"));
+  bindAvatarEvents(sock);
+  sock.on(ServerMsg.CHAT, appendChat);
+
+  return sock
+    .connect()
+    .then(() => {
+      els.status.textContent = "live · 配信を視聴中";
     })
     .catch(() => {
       els.status.textContent = "could not connect to Komorebi core (is it running?)";
@@ -164,6 +206,15 @@ els.start.addEventListener("click", async () => {
   await connect(selectedPersona);
 });
 
+// ?mode=live → read-only broadcast viewer (the AITuber-on-a-stream view).
+// Otherwise → the normal 1:1 onboarding + chat.
+const liveMode = new URLSearchParams(location.search).get("mode") === "live";
+
 setupAvatar();
-renderSamples();
-loadPersonas();
+if (liveMode) {
+  document.body.classList.add("live");
+  connectLive();
+} else {
+  renderSamples();
+  loadPersonas();
+}

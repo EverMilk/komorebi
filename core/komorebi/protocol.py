@@ -33,6 +33,7 @@ class ServerMsg(str, Enum):
     VISEME = "viseme"
     AUDIO = "audio"
     SPEECH_END = "speech_end"
+    CHAT = "chat"
     ERROR = "error"
 
 
@@ -65,6 +66,11 @@ def audio(fmt: str, data_b64: str) -> dict[str, Any]:
 
 def speech_end() -> dict[str, Any]:
     return {"type": ServerMsg.SPEECH_END}
+
+
+def chat(author: str, text: str, platform: str = "") -> dict[str, Any]:
+    """A viewer chat message echoed to live viewers (so they see what was asked)."""
+    return {"type": ServerMsg.CHAT, "author": author, "text": text, "platform": platform}
 
 
 def error(message: str) -> dict[str, Any]:

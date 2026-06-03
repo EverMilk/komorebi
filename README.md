@@ -4,7 +4,7 @@
 > living animated character — no setup, no fear, no API key required to try.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
-![status: early (M0)](https://img.shields.io/badge/status-M0%20skeleton-orange)
+![status: M3 live](https://img.shields.io/badge/status-M3%20live-brightgreen)
 ![python](https://img.shields.io/badge/python-3.10%2B-blue)
 
 <!-- TODO(M1): replace with a 3s demo GIF — "open browser → character talks back" -->
@@ -72,13 +72,47 @@ vars (see [`docs/architecture.md`](./docs/architecture.md)) when you're ready.
   **VRM renderer** (three-vrm) alongside the placeholder, selectable at runtime and
   falling back gracefully. Live2D (optional plugin) and the TS + Vite migration are
   the remaining M2 items. See [`docs/avatar-renderers.md`](./docs/avatar-renderers.md).
-- **M3 — real demand:** YouTube/Twitch chat adapter, community persona gallery, official Codex backend.
+- **M3 — real demand (you are here) ✅:** live broadcast mode driven by real
+  Twitch / YouTube chat (plus a zero-setup `mock` source), a community persona
+  gallery, and a first-class **Codex** LLM backend. See
+  [`docs/live-streaming.md`](./docs/live-streaming.md).
+
+### Live broadcast mode (AITuber on a stream)
+
+The same engine that powers 1:1 chat can run a *shared* character that reacts to
+a live chat feed and broadcasts to every viewer — point OBS at it and you have an
+AITuber. It runs out of the box with a built-in mock chat source:
+
+```bash
+KOMOREBI_STREAM=mock python -m komorebi
+# open http://localhost:8000/?mode=live
+```
+
+Twitch works with **no credentials** (anonymous read-only IRC); YouTube needs an
+API key. Full setup in [`docs/live-streaming.md`](./docs/live-streaming.md).
+
+### Powered by Codex
+
+Komorebi ships a first-class `codex` LLM backend — "powered by Codex" is one line
+of config:
+
+```bash
+KOMOREBI_LLM=codex OPENAI_API_KEY=sk-... python -m komorebi
+```
+
+With no key set the character explains how to enable it instead of failing, so
+the zero-config demo (`KOMOREBI_LLM=echo`) stays the friendly default.
 
 ### Choosing the emotion engine
 
 Set `KOMOREBI_EMOTION=heuristic` (default, zero-cost keyword rules) or
 `KOMOREBI_EMOTION=llm` (labels each line with the configured LLM backend, falling
 back to the heuristic on any error).
+
+### Add a persona (no code)
+
+Drop a YAML file in [`personas/community/`](./personas/community/) and it shows up
+in the picker automatically — see the gallery README there for the 3-step flow.
 
 ## Contributing
 

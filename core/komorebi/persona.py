@@ -40,8 +40,14 @@ class Persona:
         }
 
 
+def _persona_files() -> list[Path]:
+    # Files whose name starts with "_" (e.g. _template.persona.yaml) are skipped:
+    # they are scaffolding for contributors, not selectable characters.
+    return [p for p in _PERSONAS_DIR.rglob("*.persona.yaml") if not p.name.startswith("_")]
+
+
 def _find_persona_file(persona_id: str) -> Path | None:
-    matches = list(_PERSONAS_DIR.rglob(f"{persona_id}.persona.yaml"))
+    matches = [p for p in _persona_files() if p.name == f"{persona_id}.persona.yaml"]
     return matches[0] if matches else None
 
 
@@ -68,4 +74,4 @@ def load_persona(persona_id: str) -> Persona:
 
 
 def list_personas() -> list[str]:
-    return sorted(p.name[: -len(".persona.yaml")] for p in _PERSONAS_DIR.rglob("*.persona.yaml"))
+    return sorted(p.name[: -len(".persona.yaml")] for p in _persona_files())
